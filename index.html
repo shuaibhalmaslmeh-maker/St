@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>متجر سلتك | Saltak Store</title>
+    <style>
+        :root { 
+            --bg: #fcfcfc; --main: #1a1a1a; --gold: #c5a059; --white: #ffffff; 
+            --card: #ffffff; --text: #1a1a1a; --border: #eee;
+        }
+        .dark-mode { 
+            --bg: #121212; --main: #ffffff; --white: #1e1e1e; 
+            --card: #1e1e1e; --text: #f0f0f0; --border: #333;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); margin: 0; transition: 0.3s; overflow-x: hidden; touch-action: pan-y; }
+        
+        nav { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: var(--white); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        .brand-name { font-weight: bold; letter-spacing: 3px; cursor: pointer; font-size: 1.3rem; color: var(--main); flex: 1; }
+        .nav-icons { display: flex; gap: 20px; align-items: center; justify-content: flex-end; }
+        .icon-btn { cursor: pointer; font-size: 1.3rem; position: relative; display: flex; align-items: center; }
+        #cartCount, #favCount { position: absolute; top: -8px; right: -12px; background: var(--gold); color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.65rem; }
+        #favCount { background: #ff4757; }
+
+        .user-svg { width: 24px; height: 24px; fill: none; stroke: var(--main); stroke-width: 1.5; transition: 0.3s; }
+        .logged-in .user-svg { stroke: var(--gold); }
+
+        .search-container { padding: 10px 20px; text-align: center; }
+        .search-container input { width: 100%; max-width: 500px; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--white); color: var(--text); outline: none; }
+        
+        .container { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; padding: 15px; }
+        .product-card { background: var(--card); padding: 12px; border: 1px solid var(--border); text-align: center; border-radius: 12px; position: relative; transition: 0.2s; }
+        .product-card img { width: 100%; height: 160px; object-fit: cover; border-radius: 8px; cursor: pointer; }
+        .fav-btn { position: absolute; top: 20px; right: 20px; cursor: pointer; font-size: 1.2rem; z-index: 5; }
+        .price { color: var(--gold); font-weight: bold; display: block; margin: 8px 0; }
+        .stock-alert { color: #e67e22; font-size: 0.75rem; font-weight: bold; display: block; margin-bottom: 5px; }
+        .add-btn { background: var(--main); color: var(--bg); border: none; padding: 10px; width: 100%; border-radius: 6px; cursor: pointer; font-weight: bold; }
+
+        #detailsModal, #authModal, #adminGateway { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 5000; justify-content: center; align-items: center; }
+        .modal-card { background: var(--white); padding: 25px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; position: relative; color: var(--text); max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        
+        .profile-header { background: linear-gradient(135deg, var(--main), #333); padding: 30px 20px; border-radius: 15px; color: white; margin-bottom: 20px; position: relative; }
+        .profile-avatar { width: 60px; height: 60px; background: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto 10px; font-weight: bold; color: #1a1a1a; }
+        .order-history-title { text-align: right; font-weight: bold; margin: 15px 0 10px; display: flex; align-items: center; gap: 8px; font-size: 1rem; }
+        .user-order-item { background: var(--bg); border: 1px solid var(--border); padding: 15px; border-radius: 12px; margin-bottom: 12px; text-align: right; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.65rem; font-weight: bold; text-transform: uppercase; }
+        .status-pending { background: rgba(241, 196, 15, 0.2); color: #d4ac0d; }
+        .status-shipped { background: rgba(52, 152, 219, 0.2); color: #2980b9; }
+        .status-delivered { background: rgba(46, 204, 113, 0.2); color: #27ae60; }
+
+        .reviews-section { margin-top: 20px; text-align: right; border-top: 1px solid var(--border); padding-top: 15px; }
+        .review-item { background: var(--bg); padding: 8px; border-radius: 8px; margin-bottom: 8px; border: 1px solid var(--border); font-size: 0.85rem; }
+        .rev-header { display: flex; justify-content: space-between; font-weight: bold; }
+        .rev-stars { color: #f1c40f; }
+        .stars-input { font-size: 1.5rem; cursor: pointer; color: #ccc; margin-bottom: 10px; }
+        .stars-input .active { color: #f1c40f; }
+
+        .admin-form { background: #1a1a1a; color: white; max-height: 90vh; overflow-y: auto; width: 95%; max-width: 600px; }
+        .admin-tabs { display: flex; justify-content: space-around; margin-bottom: 20px; border-bottom: 1px solid #444; overflow-x: auto; }
+        .tab-btn { padding: 10px; cursor: pointer; opacity: 0.6; white-space: nowrap; }
+        .tab-btn.active { opacity: 1; border-bottom: 2px solid var(--gold); color: var(--gold); }
+        .admin-section { display: none; }
+        .admin-section.active { display: block; }
+
+        .sidebar, .cart-sidebar { position: fixed; top: 0; width: 300px; height: 100%; background: var(--white); z-index: 1001; transition: 0.4s; padding: 20px; box-sizing: border-box; box-shadow: -2px 0 10px rgba(0,0,0,0.1); }
+        .sidebar { right: -320px; background: #1a1a1a; color: white; }
+        .cart-sidebar { left: -320px; overflow-y: auto; color: var(--text); }
+        .active { right: 0 !important; left: 0 !important; }
+        .sidebar a { display: block; padding: 15px; color: white; text-decoration: none; border-bottom: 1px solid #333; cursor: pointer; }
+        
+        .promo-section { margin-top: 15px; padding: 10px; background: var(--bg); border-radius: 8px; border: 1px dashed var(--gold); }
+        .back-btn-fav { width: calc(100% - 30px); padding: 10px; background: var(--gold); color: white; border: none; border-radius: 8px; margin: 10px 15px; cursor: pointer; display: none; font-weight: bold; text-align: center; }
+        
+        .back-nav-btn { width: 100%; padding: 10px; background: #eee; border: none; border-radius: 8px; margin-bottom: 15px; cursor: pointer; font-weight: bold; color: #333; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .dark-mode .back-nav-btn { background: #333; color: #eee; }
+
+        .order-card { background: #222; border: 1px solid #444; padding: 10px; margin-top: 10px; border-radius: 10px; text-align: right; font-size: 0.85rem; }
+        .admin-form input, .admin-form textarea, .admin-form select { width: 100%; padding: 10px; margin: 5px 0; border-radius: 8px; border: 1px solid #333; background: #222; color: white; box-sizing: border-box; }
+        
+        .modal-card input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); box-sizing: border-box; outline: none; }
+        
+        /* كبسة الرجوع الجديدة بداخل المودال */
+        .close-profile-btn { position: absolute; top: 15px; left: 15px; background: rgba(255,255,255,0.1); color: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; z-index: 10; transition: 0.3s; }
+        .close-profile-btn:hover { background: rgba(255,255,255,0.2); }
+    </style>
+</head>
+<body id="mainBody">
+
+    <nav>
+        <div onclick="toggleMenu()" style="cursor:pointer; font-size:1.5rem;">☰</div>
+        <div class="brand-name" id="brandBtn">SALTAK</div>
+        <div class="nav-icons">
+            <div class="icon-btn" onclick="toggleDarkMode()" id="darkIcon">🌙</div>
+            <div class="icon-btn" onclick="showFavorites()">❤️ <span id="favCount">0</span></div>
+            <div class="icon-btn" onclick="toggleCart()">🛒 <span id="cartCount">0</span></div>
+            <div class="icon-btn" onclick="openAuth()" id="userBtn">
+                <svg class="user-svg" viewBox="0 0 24 24">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+            </div>
+        </div>
+    </nav>
+
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="ابحث في سلتك..." oninput="searchProducts()">
+    </div>
+
+    <button id="backToStore" class="back-btn-fav" onclick="render(products)">🔙 العودة للمتجر الكامل</button>
+
+    <div class="container" id="mainStore"></div>
+
+    <div id="detailsModal">
+        <div class="modal-card">
+            <button class="back-nav-btn" onclick="closeModals()">🔙 رجوع للمتجر</button>
+            <img id="detImg" style="width:100%; height:200px; object-fit:cover; border-radius:10px;">
+            <h2 id="detName"></h2>
+            <p id="detDesc"></p>
+            <p id="detStock" style="color:var(--gold); font-weight:bold;"></p>
+            <div id="detPrice" style="font-size:1.3rem; font-weight:bold; margin:10px 0;"></div>
+            <button class="add-btn" id="detAddBtn">أضف للسلة</button>
+
+            <div class="reviews-section">
+                <h3>التقييمات ⭐</h3>
+                <div id="reviewsList">لا توجد تقييمات بعد.</div>
+                <div id="reviewInputArea" style="display:none; margin-top:15px; background:var(--bg); padding:10px; border-radius:10px;">
+                    <div class="stars-input" id="starRating">
+                        <span onclick="setRate(1)">☆</span><span onclick="setRate(2)">☆</span><span onclick="setRate(3)">☆</span><span onclick="setRate(4)">☆</span><span onclick="setRate(5)">☆</span>
+                    </div>
+                    <textarea id="revText" placeholder="رأيك بالمنتج..." style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--white); color:var(--text);"></textarea>
+                    <button class="add-btn" onclick="sendReview()" style="margin-top:10px; background:var(--gold); color:white;">نشر التقييم</button>
+                </div>
+                <p id="reviewAuthNote" style="font-size:0.75rem; color:gray; text-align:center;">سجل دخولك لتتمكن من إضافة تقييم.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="cart-sidebar" id="cartSidebar">
+        <button class="back-nav-btn" onclick="toggleCart()">🔙 استكمال التسوق</button>
+        <h2>سلتك</h2>
+        <div id="cartItemsList"></div>
+        <div class="promo-section">
+            <input type="text" id="promoInput" placeholder="كود الخصم" style="width:60%; padding:5px;">
+            <button onclick="applyPromo()" style="width:35%; background:var(--gold); border:none; color:white; padding:5px; border-radius:5px;">تطبيق</button>
+        </div>
+        <div style="margin: 15px 0; text-align: right;">
+            <label style="font-size: 0.8rem; font-weight: bold;">مكان التوصيل:</label>
+            <select id="locationSelect" onchange="updateCartUI()" style="width:100%; padding:8px; border-radius:8px; background:var(--bg); color:var(--text); border:1px solid var(--border); margin-top:5px;">
+                <option value="amman">عمان (2 JOD)</option>
+                <option value="other">محافظة أخرى (3 JOD)</option>
+            </select>
+            <p id="deliveryInfo" style="font-size: 0.75rem; color: var(--gold); margin: 5px 0;"></p>
+        </div>
+        <hr>
+        <div style="display:flex; justify-content:space-between;"><span>المجموع:</span><span><span id="totalAmount">0</span> JOD</span></div>
+        <div id="discountRow" style="display:none; color:red; justify-content:space-between;"><span>الخصم:</span><span>-<span id="discountVal">0</span> JOD</span></div>
+        <div style="display:flex; justify-content:space-between;"><span>التوصيل:</span><span><span id="deliveryVal">0</span> JOD</span></div>
+        <div style="font-weight:bold; margin-top:5px; display:flex; justify-content:space-between; font-size:1.2rem; border-top:1px solid var(--border); padding-top:5px;">
+            <span>الصافي:</span><span><span id="finalAmount">0</span> JOD</span>
+        </div>
+        <br>
+        <div style="text-align:right;">
+            <label><input type="radio" name="payMethod" value="كاش" checked> كاش 💵</label><br>
+            <label><input type="radio" name="payMethod" value="كليك"> كليك 📱</label>
+        </div>
+        <button class="add-btn" style="background:var(--gold); color:black; margin-top:15px;" onclick="sendOrder()">تأكيد الطلب</button>
+    </div>
+
+    <div id="adminGateway">
+        <div class="modal-card admin-form">
+            <div id="adminLogin">
+                <h2>إدارة سلتك</h2>
+                <input type="password" id="adminPass" placeholder="كلمة السر">
+                <button class="add-btn" onclick="verifyAdmin()" style="margin-top:10px;">دخول</button>
+            </div>
+            <div id="adminPanel" style="display:none;">
+                <div class="admin-tabs">
+                    <div class="tab-btn active" id="t1" onclick="switchTab('tabProducts', 't1')">📦 منتجات</div>
+                    <div class="tab-btn" id="t4" onclick="switchTab('tabOrders', 't4')">📋 طلبات</div>
+                    <div class="tab-btn" id="t2" onclick="switchTab('tabPromos', 't2')">🎫 أكواد</div>
+                    <div class="tab-btn" id="t3" onclick="switchTab('tabStats', 't3')">📊 إحصائيات</div>
+                </div>
+                <div id="tabProducts" class="admin-section active">
+                    <input type="text" id="itemName" placeholder="اسم المنتج">
+                    <input type="number" id="itemPrice" placeholder="السعر">
+                    <textarea id="itemDesc" placeholder="الوصف"></textarea>
+                    <input type="number" id="itemStock" placeholder="الكمية">
+                    <select id="itemCat"><option value="عطور">عطور</option><option value="نظارات">نظارات</option><option value="أنتيك">أنتيك</option><option value="أجهزة">أجهزة</option></select>
+                    <input type="file" id="itemFile">
+                    <input type="hidden" id="editKey">
+                    <button class="add-btn" onclick="saveProduct()" style="background:var(--gold); color:black;">حفظ المنتج</button>
+                    <div id="adminList" style="margin-top:15px; border-top:1px solid #444;"></div>
+                </div>
+                <div id="tabOrders" class="admin-section">
+                    <h3>سجل الطلبات</h3>
+                    <div id="adminOrdersList">جارِ تحميل الطلبات...</div>
+                </div>
+                <div id="tabPromos" class="admin-section">
+                    <input type="text" id="promoCodeName" placeholder="الكود">
+                    <input type="number" id="promoPercent" placeholder="نسبة الخصم %">
+                    <button class="add-btn" onclick="savePromoCode()">إضافة الكود</button>
+                    <div id="promoList" style="margin-top:15px; border-top:1px solid #444;"></div>
+                </div>
+                <div id="tabStats" class="admin-section">
+                    <p>إجمالي الزيارات: <b id="statVisits" style="color:var(--gold);">0</b></p>
+                    <p>المستخدمين المسجلين: <b id="statUsers" style="color:var(--gold);">0</b></p>
+                </div>
+                <button class="add-btn" onclick="location.reload()" style="margin-top:20px; background:#444;">خروج</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="authModal">
+        <div class="modal-card" style="padding: 15px;">
+            <span onclick="closeModals()" style="position:absolute; left:15px; top:10px; cursor:pointer; font-size:1.5rem;">×</span>
+            
+            <div id="loginView">
+                <h3 style="margin-top:30px;">مرحباً بك مجدداً</h3>
+                <input type="text" id="loginUser" placeholder="رقم الهاتف">
+                <input type="password" id="loginPass" placeholder="كلمة السر">
+                <button class="add-btn" onclick="userLogin()" style="background:var(--gold); color:black;">دخول</button>
+                <p onclick="toggleAuthView('reg')" style="cursor:pointer; color:var(--gold); font-size:0.85rem; margin-top:15px;">لا تملك حساب؟ سجل الآن</p>
+            </div>
+
+            <div id="registerView" style="display:none;">
+                <h3 style="margin-top:30px;">إنشاء حساب جديد</h3>
+                <input type="text" id="regName" placeholder="الاسم الكامل">
+                <input type="number" id="regPhone" placeholder="رقم الهاتف">
+                <input type="password" id="regPass" placeholder="كلمة السر">
+                <button class="add-btn" onclick="userRegister()">إنضم إلينا</button>
+                <p onclick="toggleAuthView('login')" style="cursor:pointer; color:var(--gold); font-size:0.85rem; margin-top:15px;">لديك حساب بالفعل؟</p>
+            </div>
+
+            <div id="profileView" style="display:none;">
+                <button class="close-profile-btn" onclick="closeModals()">✕</button>
+                
+                <div class="profile-header">
+                    <div class="profile-avatar" id="avatarChar">S</div>
+                    <h3 id="profNameDisplay" style="margin:0;"></h3>
+                    <p id="profPhoneDisplay" style="font-size:0.8rem; opacity:0.8; margin:5px 0 0;"></p>
+                </div>
+                
+                <div class="order-history-title">
+                    <span>📦</span> <span>تتبع طلباتك</span>
+                </div>
+
+                <div id="userOrdersList" style="margin-bottom:20px; max-height:280px; overflow-y:auto; padding:5px;">
+                    جاري تحميل الطلبات...
+                </div>
+
+                <button class="back-nav-btn" onclick="closeModals()" style="margin-bottom:10px;">🔙 استكمال التسوق</button>
+                <button class="add-btn" onclick="userLogout()" style="background:transparent; color:#ff4444; border:1px solid #ff4444;">تسجيل الخروج</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar" id="sidebar">
+        <span onclick="toggleMenu()" style="cursor:pointer; font-size:1.5rem;">×</span>
+        <h2 style="color:var(--gold);">الأقسام</h2>
+        <a onclick="filterProducts('all')">كل المعروضات</a>
+        <a onclick="filterProducts('عطور')">عطور</a>
+        <a onclick="filterProducts('نظارات')">نظارات</a>
+        <a onclick="filterProducts('أنتيك')">أنتيك</a>
+        <a onclick="filterProducts('أجهزة')">أجهزة</a>
+    </div>
+
+    <script>
+        const DB_URL = "https://saltak-default-rtdb.firebaseio.com/";
+        let products = {}, promos = {}, cart = [], favorites = JSON.parse(localStorage.getItem('saltak_favs')) || [];
+        let loggedUser = JSON.parse(localStorage.getItem('saltak_client')) || null;
+        let appliedDiscount = 0, currentDeliveryFee = 0;
+        let currentK = "", currentRate = 0;
+
+        let touchStartX = 0;
+        document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; });
+        document.addEventListener('touchend', e => {
+            let touchEndX = e.changedTouches[0].screenX;
+            if (Math.abs(touchEndX - touchStartX) > 120) {
+                closeModals(); 
+                if(document.getElementById('cartSidebar').classList.contains('active')) toggleCart();
+                if(document.getElementById('sidebar').classList.contains('active')) toggleMenu();
+            }
+        });
+
+        window.onload = () => { 
+            loadData(); 
+            trackVisit(); 
+            updateIcon(); 
+            
+            const savedCart = localStorage.getItem('saltak_temp_cart');
+            if(savedCart) {
+                cart = JSON.parse(savedCart);
+                localStorage.removeItem('saltak_temp_cart'); 
+                updateCartUI();
+                setTimeout(() => toggleCart(), 500); 
+            }
+
+            if(localStorage.getItem('theme') === 'dark') toggleDarkMode(true); 
+        };
+
+        async function loadData() {
+            const res = await fetch(`${DB_URL}products.json`); products = await res.json() || {};
+            const pRes = await fetch(`${DB_URL}promos.json`); promos = await pRes.json() || {};
+            render(products);
+        }
+
+        function render(data, isFilteredMode = false) {
+            const store = document.getElementById('mainStore'); store.innerHTML = '';
+            document.getElementById('backToStore').style.display = isFilteredMode ? 'block' : 'none';
+            Object.keys(data).forEach(k => {
+                const p = data[k];
+                let stockAlert = (p.stock > 0 && p.stock <= 3) ? `<span class="stock-alert">🔥 بقي ${p.stock} قطع فقط!</span>` : "";
+                store.innerHTML += `<div class="product-card">
+                    <span class="fav-btn" onclick="toggleFavorite(event, '${k}')">${favorites.includes(k) ? '❤️' : '🤍'}</span>
+                    <img src="${p.img}" onclick="openDetails('${k}')">
+                    <h3 onclick="openDetails('${k}')" style="font-size:0.9rem;">${p.name}</h3>
+                    ${stockAlert}
+                    <span class="price">${p.price} JOD</span>
+                    <button class="add-btn" onclick="${p.stock > 0 ? `addToCart('${k}')` : ''}">${p.stock > 0 ? 'أضف للسلة' : 'نفذت الكمية'}</button>
+                </div>`;
+            });
+            document.getElementById('favCount').innerText = favorites.length;
+        }
+
+        function filterProducts(c) { if(c === 'all') { render(products); } else { const filtered = Object.fromEntries(Object.entries(products).filter(([k,v])=>v.cat===c)); render(filtered, true); } toggleMenu(); }
+        function showFavorites() { const f = {}; favorites.forEach(k => { if(products[k]) f[k] = products[k]; }); render(f, true); }
+
+        async function openDetails(k) {
+            currentK = k; currentRate = 0; setRate(0);
+            const p = products[k];
+            document.getElementById('detImg').src=p.img;
+            document.getElementById('detName').innerText=p.name;
+            document.getElementById('detDesc').innerText=p.desc||"";
+            document.getElementById('detStock').innerText="المتوفر: "+p.stock;
+            document.getElementById('detPrice').innerText=p.price+" JOD";
+            document.getElementById('detAddBtn').onclick = () => addToCart(k);
+            document.getElementById('reviewInputArea').style.display = loggedUser ? 'block' : 'none';
+            document.getElementById('reviewAuthNote').style.display = loggedUser ? 'none' : 'block';
+            loadReviews(k);
+            document.getElementById('detailsModal').style.display='flex';
+        }
+
+        async function loadReviews(k) {
+            const res = await fetch(`${DB_URL}reviews/${k}.json`); const revs = await res.json() || {};
+            const list = document.getElementById('reviewsList'); list.innerHTML = '';
+            const keys = Object.keys(revs);
+            if(keys.length === 0) { list.innerHTML = "لا توجد تقييمات بعد."; return; }
+            keys.reverse().forEach(rk => { const r = revs[rk]; list.innerHTML += `<div class="review-item"><div class="rev-header"><span>${r.name}</span><span class="rev-stars">${'★'.repeat(r.rate)}${'☆'.repeat(5-r.rate)}</span></div><div style="margin-top:5px;">${r.text}</div></div>`; });
+        }
+
+        function setRate(n) { currentRate = n; const stars = document.querySelectorAll('#starRating span'); stars.forEach((s, i) => { s.innerHTML = i < n ? '★' : '☆'; s.classList.toggle('active', i < n); }); }
+        async function sendReview() { const txt = document.getElementById('revText').value; if(currentRate === 0) return alert("اختر عدد النجوم"); if(!txt.trim()) return alert("اكتب تعليقاً"); const data = { name: loggedUser.name, rate: currentRate, text: txt, date: new Date().toLocaleString() }; await fetch(`${DB_URL}reviews/${currentK}.json`, { method: 'POST', body: JSON.stringify(data) }); document.getElementById('revText').value = ''; setRate(0); loadReviews(currentK); }
+
+        function addToCart(k) { let item = {...products[k], firebaseKey: k}; cart.push(item); updateCartUI(); }
+        function removeFromCart(idx) { cart.splice(idx, 1); updateCartUI(); }
+
+        function updateCartUI() {
+            let sub = 0;
+            document.getElementById('cartItemsList').innerHTML = cart.map((i, idx) => { sub += i.price; return `<div style="border-bottom:1px solid var(--border); padding:8px; display:flex; justify-content:space-between; align-items:center;"><span>${i.name} (${i.price} JOD)</span><span onclick="removeFromCart(${idx})" style="color:red; cursor:pointer; font-size:1.2rem;">🗑️</span></div>` }).join('');
+            const loc = document.getElementById('locationSelect').value;
+            currentDeliveryFee = (sub >= 15 || sub === 0) ? 0 : (loc === 'amman' ? 2 : 3);
+            document.getElementById('deliveryInfo').innerText = sub >= 15 ? "توصيل مجاني ✅" : sub > 0 ? `باقي ${(15-sub).toFixed(1)} للمجاني` : "";
+            document.getElementById('cartCount').innerText = cart.length;
+            document.getElementById('totalAmount').innerText = sub;
+            document.getElementById('deliveryVal').innerText = currentDeliveryFee;
+            let disc = (sub * appliedDiscount) / 100;
+            document.getElementById('discountVal').innerText = disc.toFixed(2);
+            document.getElementById('discountRow').style.display = disc > 0 ? 'flex' : 'none';
+            document.getElementById('finalAmount').innerText = (sub - disc + currentDeliveryFee).toFixed(2);
+        }
+
+        async function sendOrder() {
+            if(!loggedUser) return openAuth();
+            if(cart.length === 0) return alert("السلة فارغة");
+            const locName = document.getElementById('locationSelect').options[document.getElementById('locationSelect').selectedIndex].text;
+            const method = document.querySelector('input[name="payMethod"]:checked').value;
+            const subtotal = document.getElementById('totalAmount').innerText, discount = document.getElementById('discountVal').innerText, delivery = document.getElementById('deliveryVal').innerText, final = document.getElementById('finalAmount').innerText;
+            let itemsMsg = "";
+            for (let item of cart) {
+                let currentStock = products[item.firebaseKey].stock;
+                await fetch(`${DB_URL}products/${item.firebaseKey}.json`, { method: 'PATCH', body: JSON.stringify({ stock: Math.max(0, currentStock - 1) }) });
+                itemsMsg += `- *${item.name}* (${item.price} JOD)\n`;
+            }
+            const orderData = { user: loggedUser, items: cart, subtotal: subtotal, discount: discount, delivery: delivery, final: final, location: locName, method: method, status: "قيد التحضير", date: new Date().toLocaleString() };
+            await fetch(`${DB_URL}orders.json`, { method: 'POST', body: JSON.stringify(orderData) });
+            const whatsappMsg = `✨ *طلب جديد من متجر سلتك* ✨\n\n👤 *العميل:* ${loggedUser.name}\n📞 *الهاتف:* ${loggedUser.phone}\n📍 *المنطقة:* ${locName}\n\n📦 *المنتجات:*\n${itemsMsg}\n──────────────\n💰 *المجموع:* ${subtotal} JOD\n🎁 *الخصم:* -${discount} JOD\n🚚 *التوصيل:* +${delivery} JOD\n✅ *الصافي المطلوب:* *${final} JOD*\n\n💳 *طريقة الدفع:* ${method}\n──────────────`;
+            window.open("https://wa.me/962788468646?text=" + encodeURIComponent(whatsappMsg));
+            cart = []; updateCartUI(); toggleCart(); loadData();
+        }
+
+        function toggleFavorite(e, k) { e.stopPropagation(); favorites.includes(k) ? favorites = favorites.filter(id => id !== k) : favorites.push(k); localStorage.setItem('saltak_favs', JSON.stringify(favorites)); document.getElementById('favCount').innerText = favorites.length; if(document.getElementById('backToStore').style.display === 'block') showFavorites(); else render(products); }
+        function searchProducts() { const t = document.getElementById('searchInput').value.toLowerCase(); const f = {}; Object.keys(products).forEach(k=>{ if(products[k].name.toLowerCase().includes(t)) f[k]=products[k]; }); render(f, t.length > 0); }
+        function applyPromo() { const code = document.getElementById('promoInput').value.toUpperCase(); const p = Object.values(promos).find(x => x.code === code); if(p) { appliedDiscount = p.percent; updateCartUI(); alert("تم تطبيق الخصم!"); } else alert("الكود غير صحيح"); }
+        
+        async function verifyAdmin() { if(document.getElementById('adminPass').value === "Ss0908@@") { document.getElementById('adminLogin').style.display='none'; document.getElementById('adminPanel').style.display='block'; updateAdminLists(); updateAdminOrders(); updatePromosList(); const vRes = await fetch(`${DB_URL}stats/visits.json`), uRes = await fetch(`${DB_URL}clients.json`); document.getElementById('statVisits').innerText = await vRes.json() || 0; const uData = await uRes.json(); document.getElementById('statUsers').innerText = uData ? Object.keys(uData).length : 0; } else alert("خطأ"); }
+        async function updateAdminOrders() { const res = await fetch(`${DB_URL}orders.json`); const data = await res.json() || {}; const list = document.getElementById('adminOrdersList'); list.innerHTML = ''; Object.keys(data).reverse().forEach(k => { const o = data[k]; list.innerHTML += `<div class="order-card"><b>📅 ${o.date}</b> | 👤 ${o.user.name}<br>💰 ${o.final} JOD | 📍 ${o.location}<br>الحالة: <span class="status-badge status-${o.status === 'قيد التحضير' ? 'pending' : o.status === 'تم الشحن' ? 'shipped' : 'delivered'}">${o.status}</span><br><button onclick="updateOrderStatus('${k}', 'قيد التحضير')">🟡</button><button onclick="updateOrderStatus('${k}', 'تم الشحن')">🔵</button><button onclick="updateOrderStatus('${k}', 'تم التسليم')">🟢</button><button onclick="delItem('orders','${k}')" style="background:red;">🗑️</button></div>`; }); }
+        async function updateOrderStatus(id, newStatus) { await fetch(`${DB_URL}orders/${id}.json`, { method: 'PATCH', body: JSON.stringify({status: newStatus}) }); updateAdminOrders(); }
+        function switchTab(id, btnId) { document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById(id).classList.add('active'); document.getElementById(btnId).classList.add('active'); if(id === 'tabOrders') updateAdminOrders(); if(id === 'tabPromos') updatePromosList(); }
+        async function savePromoCode() { const c = document.getElementById('promoCodeName').value.toUpperCase(), p = parseInt(document.getElementById('promoPercent').value); await fetch(`${DB_URL}promos.json`, { method: 'POST', body: JSON.stringify({code: c, percent: p}) }); updatePromosList(); }
+        async function updatePromosList() { const res = await fetch(`${DB_URL}promos.json`); const data = await res.json() || {}; const list = document.getElementById('promoList'); list.innerHTML = ''; Object.keys(data).forEach(k => { list.innerHTML += `<div style="display:flex; justify-content:space-between; background:#222; padding:8px; margin-top:5px; border-radius:5px;"><span>${data[k].code} (${data[k].percent}%)</span><button onclick="delItem('promos','${k}')">حذف</button></div>`; }); }
+        function updateAdminLists() { const pL = document.getElementById('adminList'); pL.innerHTML = ''; Object.keys(products).forEach(k => pL.innerHTML += `<div style="display:flex; justify-content:space-between; background:#222; padding:5px; margin-top:2px; border-radius:5px;"><span>${products[k].name}</span><div><button onclick="editP('${k}')">✏️</button><button onclick="delItem('products','${k}')">🗑️</button></div></div>`); }
+        async function delItem(path, k) { if(confirm("متأكد؟")) { await fetch(`${DB_URL}${path}/${k}.json`, { method: 'DELETE' }); path === 'products' ? location.reload() : (path==='orders'?updateAdminOrders():updatePromosList()); } }
+        async function saveProduct() { const n=document.getElementById('itemName').value, pr=parseInt(document.getElementById('itemPrice').value), k=document.getElementById('editKey').value, f=document.getElementById('itemFile').files[0]; const proc = async (img) => { const data = {name:n, price:pr, desc:document.getElementById('itemDesc').value, stock:parseInt(document.getElementById('itemStock').value), cat:document.getElementById('itemCat').value, img: img || (k ? products[k].img : "")}; await fetch(k ? `${DB_URL}products/${k}.json` : `${DB_URL}products.json`, { method: k?'PATCH':'POST', body: JSON.stringify(data)}); location.reload(); }; if(f) { const r=new FileReader(); r.readAsDataURL(f); r.onload=(e)=>proc(e.target.result); } else proc(null); }
+        function editP(k) { const p=products[k]; document.getElementById('itemName').value=p.name; document.getElementById('itemPrice').value=p.price; document.getElementById('editKey').value=k; document.getElementById('itemStock').value=p.stock; switchTab('tabProducts', 't1'); }
+        
+        async function openAuth() { 
+            document.getElementById('authModal').style.display='flex'; 
+            if(loggedUser) { 
+                toggleAuthView('profile'); 
+                document.getElementById('profNameDisplay').innerText = loggedUser.name; 
+                document.getElementById('profPhoneDisplay').innerText = "📞 " + loggedUser.phone;
+                document.getElementById('avatarChar').innerText = loggedUser.name.charAt(0).toUpperCase();
+                loadUserOrders();
+            } else {
+                toggleAuthView('login'); 
+            }
+        }
+
+        async function loadUserOrders() {
+            const list = document.getElementById('userOrdersList');
+            list.innerHTML = `<div style="text-align:center; padding:20px; opacity:0.6;">جاري تحميل تاريخ طلباتك...</div>`;
+            const res = await fetch(`${DB_URL}orders.json`);
+            const allOrders = await res.json() || {};
+            const myOrders = Object.values(allOrders).filter(o => o.user.phone === loggedUser.phone).reverse();
+            
+            if(myOrders.length === 0) {
+                list.innerHTML = `<div style="text-align:center; padding:20px; opacity:0.5; font-size:0.8rem;">لم تقم بأي طلبات بعد. ابدأ التسوق الآن!</div>`;
+                return;
+            }
+
+            list.innerHTML = myOrders.map(o => {
+                const statusClass = o.status === 'قيد التحضير' ? 'pending' : o.status === 'تم الشحن' ? 'shipped' : 'delivered';
+                return `
+                <div class="user-order-item">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:0.75rem; font-weight:bold; opacity:0.7;">📅 ${o.date.split(',')[0]}</span>
+                        <span class="status-badge status-${statusClass}">${o.status}</span>
+                    </div>
+                    <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:0.85rem; color:var(--gold); font-weight:bold;">${o.final} JOD</span>
+                        <span style="font-size:0.7rem; opacity:0.6;">${o.items.length} منتجات</span>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function toggleAuthView(v) { document.getElementById('loginView').style.display = v === 'login' ? 'block' : 'none'; document.getElementById('registerView').style.display = v === 'reg' ? 'block' : 'none'; document.getElementById('profileView').style.display = v === 'profile' ? 'block' : 'none'; }
+        
+        async function userRegister() { 
+            const n=document.getElementById('regName').value, p=document.getElementById('regPhone').value, s=document.getElementById('regPass').value; 
+            if(!n || !p || !s) return alert("يرجى تعبئة كافة الحقول");
+            const user = {name:n, phone:p, pass:s}; 
+            localStorage.setItem('saltak_temp_cart', JSON.stringify(cart));
+            await fetch(`${DB_URL}clients/p_${p}.json`, {method:'PUT', body:JSON.stringify(user)}); 
+            localStorage.setItem('saltak_client', JSON.stringify(user)); 
+            location.reload(); 
+        }
+
+        async function userLogin() { 
+            const p=document.getElementById('loginUser').value, s=document.getElementById('loginPass').value; 
+            const res = await fetch(`${DB_URL}clients/p_${p}.json`); 
+            const u = await res.json(); 
+            if(u && u.pass === s) { 
+                localStorage.setItem('saltak_temp_cart', JSON.stringify(cart));
+                localStorage.setItem('saltak_client', JSON.stringify(u)); 
+                location.reload(); 
+            } else alert("رقم الهاتف أو كلمة السر غير صحيحة"); 
+        }
+
+        function userLogout() { localStorage.removeItem('saltak_client'); location.reload(); }
+        let taps = 0; document.getElementById('brandBtn').onclick = () => { taps++; if(taps > 1) document.getElementById('adminGateway').style.display = 'flex'; setTimeout(()=>taps=0, 500); };
+        function toggleDarkMode(init=false) { const b=document.getElementById('mainBody').classList.toggle('dark-mode'); if(!init) localStorage.setItem('theme', b?'dark':'light'); document.getElementById('darkIcon').innerText=b?'☀️':'🌙'; }
+        function toggleCart() { document.getElementById('cartSidebar').classList.toggle('active'); }
+        function toggleMenu() { document.getElementById('sidebar').classList.toggle('active'); }
+        function closeModals() { document.querySelectorAll('#detailsModal,#authModal,#adminGateway').forEach(m=>m.style.display='none'); }
+        function trackVisit() { fetch(`${DB_URL}stats/visits.json`).then(r=>r.json()).then(v=>fetch(`${DB_URL}stats/visits.json`, {method:'PUT', body:(v||0)+1})); }
+        function updateIcon() { if(loggedUser) document.getElementById('userBtn').classList.add('logged-in'); }
+    </script>
+</body>
+</html>
